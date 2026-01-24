@@ -1,0 +1,44 @@
+[
+  {
+    "id": "cookie-choc-chip",
+    "name": "Classic Chocolate Chip Cookies (6-pack)",
+    "price": 9.5,
+    "image": "https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?auto=format&fit=crop&w=1200&q=80",
+    "description": "Soft center, crispy edges."
+  },
+  {
+    "id": "cookie-oat",
+    "name": "Oat & Raisin Cookies (6-pack)",
+    "price": 9.0,
+    "image": "https://images.unsplash.com/photo-1601979031925-424e53b6caaa?auto=format&fit=crop&w=1200&q=80",
+    "description": "Cozy, classic, lightly spiced."
+  },
+  {
+    "id": "muffin-blueberry",
+    "name": "Blueberry Muffins (4-pack)",
+    "price": 10.0,
+    "image": "https://images.unsplash.com/photo-1612182062633-9ff3b3598e96?auto=format&fit=crop&w=1200&q=80",
+    "description": "Big berries, tender crumb."
+  },
+  {
+    "id": "cake-vanilla",
+    "name": "Vanilla Celebration Cake (6-inch)",
+    "price": 32.0,
+    "image": "https://images.unsplash.com/photo-1542826438-bd32f43d626f?auto=format&fit=crop&w=1200&q=80",
+    "description": "Light vanilla sponge + buttercream."
+  },
+  {
+    "id": "cake-chocolate",
+    "name": "Chocolate Fudge Cake (6-inch)",
+    "price": 34.0,
+    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=1200&q=80",
+    "description": "Rich cocoa + silky ganache."
+  },
+  {
+    "id": "box-mixed",
+    "name": "Mixed Treat Box (12 items)",
+    "price": 24.0,
+    "image": "https://images.unsplash.com/photo-1519869325930-281384150729?auto=format&fit=crop&w=1200&q=80",
+    "description": "A surprise mix of best-sellers."
+  }
+]
