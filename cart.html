@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Your Cart — Home Bakery</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="nav">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Home Bakery</h1>
+          <div class="small">Checkout</div>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <div class="badge" data-cart-badge>0 item(s)</div>
+        <a class="btn" href="./index.html">Back to shop</a>
+      </div>
+    </header>
+
+    <div class="cart-wrap">
+      <!-- LEFT: CART ITEMS -->
+      <section class="panel">
+        <div class="panel-header">
+          <h3>Cart</h3>
+          <button class="btn-link" data-clear-cart>Clear cart</button>
+        </div>
+        <div class="panel-body">
+          <div class="notice" data-empty style="display:none">
+            Your cart is empty. Go back and add some treats 🙂
+          </div>
+
+          <div data-cart-items></div>
+        </div>
+      </section>
+
+      <!-- RIGHT: SUMMARY + CHECKOUT -->
+      <section class="panel">
+        <div class="panel-header">
+          <h3>Summary</h3>
+          <div class="small">Currency: CAD</div>
+        </div>
+
+        <div class="panel-body">
+          <div class="row"><span>Subtotal</span><strong data-subtotal>$0.00</strong></div>
+          <div class="row">
+            <span>
+              Tax
+              <span class="small" style="margin-left:6px">
+                (<label style="display:inline;color:var(--muted);font-size:12px;margin:0">
+                  <input type="checkbox" data-include-tax style="width:auto;transform:translateY(1px);margin-right:6px" />
+                  include tax
+                </label>)
+              </span>
+            </span>
+            <strong data-tax>$0.00</strong>
+          </div>
+          <div class="hr"></div>
+          <div class="row"><span class="total">Total</span><strong class="total" data-total>$0.00</strong></div>
+
+          <div class="hr"></div>
+
+          <h3 style="margin:0 0 10px 0;font-size:16px">Delivery details</h3>
+
+          <div class="form-grid">
+            <div>
+              <label for="date">Drop-off date</label>
+              <input id="date" type="date" data-delivery-date />
+            </div>
+            <div>
+              <label for="time">Time window</label>
+              <select id="time" data-delivery-time>
+                <option value="">Select...</option>
+                <option>9:00–11:00</option>
+                <option>11:00–13:00</option>
+                <option>13:00–15:00</option>
+                <option>15:00–17:00</option>
+                <option>17:00–19:00</option>
+              </select>
+            </div>
+
+            <div style="grid-column:1/-1">
+              <label for="address">Address</label>
+              <textarea id="address" placeholder="Street, unit, city, postal code" data-address></textarea>
+            </div>
+
+            <div>
+              <label for="phone">Phone</label>
+              <input id="phone" type="tel" placeholder="(###) ###-####" data-phone />
+            </div>
+            <div>
+              <label for="email">Email</label>
+              <input id="email" type="email" placeholder="you@example.com" data-email />
+            </div>
+
+            <div style="grid-column:1/-1">
+              <label for="notes">Notes (optional)</label>
+              <textarea id="notes" placeholder="Buzzer code, allergies, etc." data-notes></textarea>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+            <button class="btn btn-primary" data-place-order>Place order</button>
+            <a class="btn" href="./index.html">Add more items</a>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="notice">
+            GitHub Pages can’t receive orders directly. When you click “Place order”, a summary will appear below.
+            You can copy/paste it into an email, DM, or a Google Form workflow.
+          </div>
+
+          <label style="margin-top:10px">Order summary (JSON)</label>
+          <textarea readonly data-order-output placeholder="Click “Place order” to generate..."></textarea>
+        </div>
+      </section>
+    </div>
+
+    <div class="footer">
+      Tip: later, you can connect this to a real checkout using Stripe + a backend (or Shopify), but this is a great start.
+    </div>
+  </div>
+
+  <div class="toast" data-toast></div>
+  <script src="./cart.js"></script>
+</body>
+</html>
