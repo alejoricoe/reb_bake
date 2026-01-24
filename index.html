@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home Bakery — Order Online</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="nav">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Home Bakery</h1>
+          <div class="small">Fresh cookies • muffins • cakes</div>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <div class="badge" data-cart-badge>0 item(s)</div>
+        <a class="btn btn-primary" href="./cart.html" aria-label="Open cart">Cart</a>
+      </div>
+    </header>
+
+    <!-- PRESENTATION -->
+    <section class="hero" id="about">
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <h2>Hi, I’m <span style="color:var(--accent)">Your Name</span> 👩‍🍳</h2>
+          <p>
+            I started baking at home for friends and family, and it quickly became my favorite way to make people smile.
+            Everything here is made in small batches with simple ingredients and a lot of love.
+          </p>
+          <p class="mini">
+            Replace this paragraph + the photo anytime. (For now the photo is just a placeholder.)
+          </p>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+            <a class="btn btn-primary" href="#products">Shop products</a>
+            <a class="btn" href="./cart.html">Go to cart</a>
+          </div>
+        </div>
+
+        <!-- Your picture placeholder (edit in CSS: .hero-photo background url) -->
+        <div class="hero-photo" role="img" aria-label="Portrait photo placeholder"></div>
+      </div>
+    </section>
+
+    <!-- PRODUCTS -->
+    <div class="section-title" id="products">
+      <div>
+        <h3>Products</h3>
+        <p>Add items to your cart, then choose delivery date/time at checkout.</p>
+      </div>
+      <div class="small">Prices in CAD</div>
+    </div>
+
+    <section class="grid" data-products-grid>
+      <!-- Loaded by app.js -->
+    </section>
+
+    <div class="footer">
+      No payments on this demo (GitHub Pages). “Place order” generates a summary you can copy and follow up by email/text.
+    </div>
+  </div>
+
+  <div class="toast" data-toast></div>
+  <script src="./app.js"></script>
+</body>
+</html>
