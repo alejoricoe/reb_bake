@@ -1,217 +1,89 @@
-// app.js
-const CONFIG = {
-  currency: "CAD",
-  productsJsonPath: "./products.json"
-};
+function renderProducts(products) {
 
-function formatMoney(amount) {
-  return new Intl.NumberFormat("en-CA", {
-    style: "currency",
-    currency: CONFIG.currency
-  }).format(amount);
-}
+  const container = document.getElementById("product-list");
+  container.innerHTML = "";
 
-function readCart() {
-  try {
-    return JSON.parse(localStorage.getItem("bakery_cart_v1")) || {};
-  } catch {
-    return {};
-  }
-}
+  products.forEach((p, index) => {
 
-function writeCart(cart) {
-  localStorage.setItem("bakery_cart_v1", JSON.stringify(cart));
-  updateCartBadge();
-}
+    const media = [];
 
-function cartCount(cart) {
-  return Object.values(cart).reduce((sum, qty) => sum + Number(qty || 0), 0);
-}
+    if (p.video) media.push({type:"video",src:p.video});
 
-function updateCartBadge() {
-  const badge = document.querySelector("[data-cart-badge]");
-  if (!badge) return;
-  const cart = readCart();
-  badge.textContent = `${cartCount(cart)} item(s)`;
-}
-
-function toast(msg) {
-  const t = document.querySelector("[data-toast]");
-  if (!t) return;
-  t.textContent = msg;
-  t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 1200);
-}
-
-async function loadProducts() {
-  const res = await fetch(CONFIG.productsJsonPath, { cache: "no-store" });
-  if (!res.ok) throw new Error("Failed to load products.json");
-  return await res.json();
-}
-
-function getProductThumb(product) {
-  return product.image || product.poster || product.gallery?.[0] || "";
-}
-
-function createMediaArea(product) {
-  const wrap = document.createElement("div");
-  wrap.className = "card-media";
-
-  const thumb = getProductThumb(product);
-  const hasVideo = Boolean(product.video);
-  const gallery = Array.isArray(product.gallery) ? product.gallery.filter(Boolean) : [];
-
-  const mediaStage = document.createElement("div");
-  mediaStage.className = "media-stage";
-
-  if (hasVideo) {
-    const video = document.createElement("video");
-    video.className = "card-video";
-    video.src = product.video;
-    if (thumb) video.poster = thumb;
-    video.autoplay = true;
-    video.muted = true;
-    video.loop = true;
-    video.playsInline = true;
-    video.setAttribute("aria-label", `${product.name} product video`);
-    mediaStage.appendChild(video);
-  } else {
-    const img = document.createElement("div");
-    img.className = "card-img";
-    if (thumb) img.style.backgroundImage = `url("${thumb}")`;
-    mediaStage.appendChild(img);
-  }
-
-  wrap.appendChild(mediaStage);
-
-  if (gallery.length > 0) {
-    const overlay = document.createElement("div");
-    overlay.className = "gallery-overlay";
-
-    const galleryTrack = document.createElement("div");
-    galleryTrack.className = "gallery-track";
-
-    const slides = gallery.map((src, index) => {
-      const slide = document.createElement("img");
-      slide.className = "gallery-slide";
-      slide.src = src;
-      slide.alt = `${product.name} photo ${index + 1}`;
-      if (index !== 0) slide.hidden = true;
-      galleryTrack.appendChild(slide);
-      return slide;
-    });
-
-    const prev = document.createElement("button");
-    prev.className = "gallery-arrow gallery-arrow-left";
-    prev.type = "button";
-    prev.setAttribute("aria-label", `Previous photo for ${product.name}`);
-    prev.innerHTML = "&#8249;";
-
-    const next = document.createElement("button");
-    next.className = "gallery-arrow gallery-arrow-right";
-    next.type = "button";
-    next.setAttribute("aria-label", `Next photo for ${product.name}`);
-    next.innerHTML = "&#8250;";
-
-    let currentIndex = 0;
-    const updateSlide = () => {
-      slides.forEach((slide, index) => {
-        slide.hidden = index !== currentIndex;
+    if (p.gallery){
+      p.gallery.forEach(img=>{
+        media.push({type:"image",src:img});
       });
+    }
+
+    let current = 0;
+
+    const card = document.createElement("div");
+    card.className = "product-card";
+
+    const mediaDiv = document.createElement("div");
+    mediaDiv.className = "product-media";
+
+    const display = document.createElement("div");
+
+    function updateMedia(){
+
+      display.innerHTML = "";
+
+      const m = media[current];
+
+      if(m.type === "video"){
+
+        const vid = document.createElement("video");
+        vid.src = m.src;
+        vid.autoplay = true;
+        vid.loop = true;
+        vid.muted = true;
+
+        display.appendChild(vid);
+
+      }else{
+
+        const img = document.createElement("img");
+        img.src = m.src;
+
+        display.appendChild(img);
+      }
+    }
+
+    const left = document.createElement("button");
+    left.className = "media-arrow arrow-left";
+    left.innerHTML = "‹";
+
+    const right = document.createElement("button");
+    right.className = "media-arrow arrow-right";
+    right.innerHTML = "›";
+
+    left.onclick = () => {
+      current = (current - 1 + media.length) % media.length;
+      updateMedia();
     };
 
-    prev.addEventListener("click", (event) => {
-      event.stopPropagation();
-      currentIndex = (currentIndex - 1 + slides.length) % slides.length;
-      updateSlide();
-    });
+    right.onclick = () => {
+      current = (current + 1) % media.length;
+      updateMedia();
+    };
 
-    next.addEventListener("click", (event) => {
-      event.stopPropagation();
-      currentIndex = (currentIndex + 1) % slides.length;
-      updateSlide();
-    });
+    updateMedia();
 
-    overlay.appendChild(galleryTrack);
-    if (slides.length > 1) {
-      overlay.appendChild(prev);
-      overlay.appendChild(next);
-    }
-    mediaStage.appendChild(overlay);
+    mediaDiv.appendChild(display);
+    mediaDiv.appendChild(left);
+    mediaDiv.appendChild(right);
 
-    const showOverlay = () => overlay.classList.add("is-visible");
-    const hideOverlay = () => overlay.classList.remove("is-visible");
+    card.innerHTML += `
+      <h3>${p.name}</h3>
+      <p>${p.description}</p>
+      <p><b>$${p.price}</b></p>
+      <button onclick="addToCart(${index})">Add to cart</button>
+    `;
 
-    wrap.addEventListener("mouseenter", showOverlay);
-    wrap.addEventListener("mouseleave", hideOverlay);
-    wrap.addEventListener("focusin", showOverlay);
-    wrap.addEventListener("focusout", (event) => {
-      if (!wrap.contains(event.relatedTarget)) hideOverlay();
-    });
-  }
+    card.prepend(mediaDiv);
 
-  return wrap;
-}
+    container.appendChild(card);
 
-function productCard(p) {
-  const card = document.createElement("div");
-  card.className = "card";
-
-  const media = createMediaArea(p);
-
-  const body = document.createElement("div");
-  body.className = "card-body";
-
-  const h = document.createElement("h4");
-  h.textContent = p.name;
-
-  const d = document.createElement("p");
-  d.textContent = p.description || "";
-
-  const priceRow = document.createElement("div");
-  priceRow.className = "price-row";
-
-  const price = document.createElement("div");
-  price.className = "price";
-  price.textContent = formatMoney(p.price);
-
-  const btn = document.createElement("button");
-  btn.className = "btn btn-primary";
-  btn.textContent = "Add to cart";
-  btn.addEventListener("click", () => {
-    const cart = readCart();
-    cart[p.id] = (cart[p.id] || 0) + 1;
-    writeCart(cart);
-    toast(`Added: ${p.name}`);
   });
-
-  priceRow.appendChild(price);
-  priceRow.appendChild(btn);
-
-  body.appendChild(h);
-  body.appendChild(d);
-  body.appendChild(priceRow);
-
-  card.appendChild(media);
-  card.appendChild(body);
-
-  return card;
 }
-
-async function init() {
-  updateCartBadge();
-
-  const grid = document.querySelector("[data-products-grid]");
-  if (!grid) return;
-
-  try {
-    const products = await loadProducts();
-    grid.innerHTML = "";
-    products.forEach(p => grid.appendChild(productCard(p)));
-  } catch (e) {
-    grid.innerHTML = `<div class="notice">Could not load products. Check products.json path.</div>`;
-    console.error(e);
-  }
-}
-
-init();
