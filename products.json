@@ -24,6 +24,21 @@
       "./products/banana_muffin/image2.jpg",
       "./products/banana_muffin/image3.jpg"
     ],
-    "description": "Crunchy cookies home made with chocolate chips"
+    "description": "Home made banana muffin"
+  },
+
+  
+  {
+    "id": "banana-loaf",
+    "name": "Banana Loaf",
+    "price": 14.0,
+    "image": "./products/banana_loaf/image1.jpg",
+    "video": "./products/banana_loaf/rotation.mp4",
+    "gallery": [
+      "./products/banana_loaf/image1.jpg",
+      "./products/banana_loaf/image2.png",
+      "./products/banana_loaf/image3.jpg"
+    ],
+    "description": "Delicious banana loaf for whole family to enjoy"
   }
 ]
