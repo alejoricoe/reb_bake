@@ -21,7 +21,7 @@ use a tiny local server:
 6. Save.
 
 Your site will be live at:
-https://alejoricoe.github.io/reb_bake/
+https://alejoricoe.github.io/reb_bakes/
 
 ## Edit products
 Modify `products.json`:
