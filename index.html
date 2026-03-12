@@ -1,5 +1,4 @@
 <!doctype html>
-
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -18,65 +17,54 @@
         </div>
       </div>
 
-```
-  <div class="nav-actions">
-    <div class="badge" data-cart-badge>0 item(s)</div>
-    <a class="btn btn-primary" href="./cart.html" aria-label="Open cart">Cart</a>
-  </div>
-</header>
-
-<!-- PRESENTATION -->
-<section class="hero" id="about">
-  <div class="hero-inner">
-
-    <div class="hero-copy">
-      <h2>Hi, I’m <span style="color:var(--accent)">Your Name</span> 👩‍🍳</h2>
-      <p>
-        I started baking at home for friends and family, and it quickly became my favorite way to make people smile.
-        Everything here is made in small batches with simple ingredients and a lot of love.
-      </p>
-
-      <p class="mini">
-        Replace this paragraph or photo anytime.
-      </p>
-
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
-        <a class="btn btn-primary" href="#products">Shop products</a>
-        <a class="btn" href="./cart.html">Go to cart</a>
+      <div class="nav-actions">
+        <div class="badge" data-cart-badge>0 item(s)</div>
+        <a class="btn btn-primary" href="./cart.html" aria-label="Open cart">Cart</a>
       </div>
+    </header>
+
+    <section class="hero" id="about">
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <h2>Hi, I’m <span style="color:var(--accent)">Your Name</span> 👩‍🍳</h2>
+          <p>
+            I started baking at home for friends and family, and it quickly became my favorite way to make people smile.
+            Everything here is made in small batches with simple ingredients and a lot of love.
+          </p>
+          <p class="mini">
+            Replace this paragraph or photo anytime.
+          </p>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+            <a class="btn btn-primary" href="#products">Shop products</a>
+            <a class="btn" href="./cart.html">Go to cart</a>
+          </div>
+        </div>
+
+        <div class="hero-photo">
+          <img src="./products/reb.jpg" alt="Reb Bakes">
+        </div>
+      </div>
+    </section>
+
+    <div class="section-title" id="products">
+      <div>
+        <h3>Products</h3>
+        <p>Add items to your cart, then choose delivery date/time at checkout.</p>
+      </div>
+      <div class="small">Prices in CAD</div>
     </div>
 
-    <!-- Your bakery image -->
-    <div class="hero-photo">
-      <img src="./products/reb.jpg" alt="Reb Bakes Bakery Photo">
+    <section class="grid" data-products-grid>
+      <!-- Loaded by app.js -->
+    </section>
+
+    <div class="footer">
+      No payments on this demo (GitHub Pages). “Place order” generates a summary you can copy and follow up by email/text.
     </div>
-
-  </div>
-</section>
-
-<!-- PRODUCTS -->
-<div class="section-title" id="products">
-  <div>
-    <h3>Products</h3>
-    <p>Add items to your cart, then choose delivery date/time at checkout.</p>
-  </div>
-  <div class="small">Prices in CAD</div>
-</div>
-
-<section class="grid" data-products-grid>
-  <!-- Loaded by app.js -->
-</section>
-
-<div class="footer">
-  No payments on this demo (GitHub Pages). “Place order” generates a summary you can copy and follow up by email/text.
-</div>
-```
-
   </div>
 
   <div class="toast" data-toast></div>
-
   <script src="./app.js"></script>
-
 </body>
 </html>
