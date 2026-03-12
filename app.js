@@ -49,13 +49,100 @@ async function loadProducts() {
   return await res.json();
 }
 
+function getProductThumb(product) {
+  return product.image || product.poster || product.gallery?.[0] || "";
+}
+
+function createMediaArea(product) {
+  const wrap = document.createElement("div");
+  wrap.className = "card-media";
+
+  const thumb = getProductThumb(product);
+  const hasVideo = Boolean(product.video);
+  const gallery = Array.isArray(product.gallery) ? product.gallery.filter(Boolean) : [];
+
+  if (hasVideo) {
+    const video = document.createElement("video");
+    video.className = "card-video";
+    video.src = product.video;
+    if (thumb) video.poster = thumb;
+    video.autoplay = true;
+    video.muted = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.setAttribute("aria-label", `${product.name} product video`);
+    wrap.appendChild(video);
+  } else {
+    const img = document.createElement("div");
+    img.className = "card-img";
+    if (thumb) img.style.backgroundImage = `url("${thumb}")`;
+    wrap.appendChild(img);
+  }
+
+  if (gallery.length > 0) {
+    const overlay = document.createElement("div");
+    overlay.className = "gallery-overlay";
+
+    const galleryTrack = document.createElement("div");
+    galleryTrack.className = "gallery-track";
+
+    const slides = gallery.map((src, index) => {
+      const slide = document.createElement("img");
+      slide.className = "gallery-slide";
+      slide.src = src;
+      slide.alt = `${product.name} photo ${index + 1}`;
+      if (index !== 0) slide.hidden = true;
+      galleryTrack.appendChild(slide);
+      return slide;
+    });
+
+    const prev = document.createElement("button");
+    prev.className = "gallery-arrow gallery-arrow-left";
+    prev.type = "button";
+    prev.setAttribute("aria-label", `Previous photo for ${product.name}`);
+    prev.innerHTML = "&#8249;";
+
+    const next = document.createElement("button");
+    next.className = "gallery-arrow gallery-arrow-right";
+    next.type = "button";
+    next.setAttribute("aria-label", `Next photo for ${product.name}`);
+    next.innerHTML = "&#8250;";
+
+    let currentIndex = 0;
+    const updateSlide = () => {
+      slides.forEach((slide, index) => {
+        slide.hidden = index !== currentIndex;
+      });
+    };
+
+    prev.addEventListener("click", (event) => {
+      event.stopPropagation();
+      currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+      updateSlide();
+    });
+
+    next.addEventListener("click", (event) => {
+      event.stopPropagation();
+      currentIndex = (currentIndex + 1) % slides.length;
+      updateSlide();
+    });
+
+    overlay.appendChild(galleryTrack);
+    if (slides.length > 1) {
+      overlay.appendChild(prev);
+      overlay.appendChild(next);
+    }
+    wrap.appendChild(overlay);
+  }
+
+  return wrap;
+}
+
 function productCard(p) {
   const card = document.createElement("div");
   card.className = "card";
 
-  const img = document.createElement("div");
-  img.className = "card-img";
-  img.style.backgroundImage = `url("${p.image}")`;
+  const media = createMediaArea(p);
 
   const body = document.createElement("div");
   body.className = "card-body";
@@ -90,7 +177,7 @@ function productCard(p) {
   body.appendChild(d);
   body.appendChild(priceRow);
 
-  card.appendChild(img);
+  card.appendChild(media);
   card.appendChild(body);
 
   return card;
