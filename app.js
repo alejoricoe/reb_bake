@@ -61,6 +61,9 @@ function createMediaArea(product) {
   const hasVideo = Boolean(product.video);
   const gallery = Array.isArray(product.gallery) ? product.gallery.filter(Boolean) : [];
 
+  const mediaStage = document.createElement("div");
+  mediaStage.className = "media-stage";
+
   if (hasVideo) {
     const video = document.createElement("video");
     video.className = "card-video";
@@ -71,13 +74,15 @@ function createMediaArea(product) {
     video.loop = true;
     video.playsInline = true;
     video.setAttribute("aria-label", `${product.name} product video`);
-    wrap.appendChild(video);
+    mediaStage.appendChild(video);
   } else {
     const img = document.createElement("div");
     img.className = "card-img";
     if (thumb) img.style.backgroundImage = `url("${thumb}")`;
-    wrap.appendChild(img);
+    mediaStage.appendChild(img);
   }
+
+  wrap.appendChild(mediaStage);
 
   if (gallery.length > 0) {
     const overlay = document.createElement("div");
@@ -132,7 +137,17 @@ function createMediaArea(product) {
       overlay.appendChild(prev);
       overlay.appendChild(next);
     }
-    wrap.appendChild(overlay);
+    mediaStage.appendChild(overlay);
+
+    const showOverlay = () => overlay.classList.add("is-visible");
+    const hideOverlay = () => overlay.classList.remove("is-visible");
+
+    wrap.addEventListener("mouseenter", showOverlay);
+    wrap.addEventListener("mouseleave", hideOverlay);
+    wrap.addEventListener("focusin", showOverlay);
+    wrap.addEventListener("focusout", (event) => {
+      if (!wrap.contains(event.relatedTarget)) hideOverlay();
+    });
   }
 
   return wrap;
