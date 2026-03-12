@@ -27,6 +27,20 @@
     "description": "Home made banana muffin"
   },
 
+  {
+    "id": "crinkle",
+    "name": "Phillipino Style Crinkle",
+    "price": 3.0,
+    "image": "./products/crinkle/image1.jpg",
+    "video": "./products/crinkle/rotation.mp4",
+    "gallery": [
+      "./products/crinkle/image1.jpg",
+      "./products/crinkle/image2.png",
+      "./products/crinkle/image3.jpg"
+    ],
+    "description": "Delicious banana loaf for whole family to enjoy"
+  },
+
   
   {
     "id": "banana-loaf",
