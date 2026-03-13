@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Your Cart — Home Bakery</title>
-  <link rel="stylesheet" href="./styles.css" />
+  <title>Your Cart — Reb Bakes</title>
+  <link rel="stylesheet" href="./styles.css?v=5" />
 </head>
 <body>
   <div class="container">
     <header class="nav">
       <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        <div>
-          <h1>Home Bakery</h1>
+        <img src="./products/logo.jpg" class="nav-logo" alt="Reb Bakes Logo">
+        <div class="brand-text">
+          <h1>Reb Bakes</h1>
           <div class="small">Checkout</div>
         </div>
       </div>
@@ -30,6 +30,7 @@
           <h3>Cart</h3>
           <button class="btn-link" data-clear-cart>Clear cart</button>
         </div>
+
         <div class="panel-body">
           <div class="notice" data-empty style="display:none">
             Your cart is empty. Go back and add some treats 🙂
@@ -69,10 +70,26 @@
 
           <div class="form-grid">
             <div>
+              <label for="name">Full name</label>
+              <input id="name" type="text" placeholder="Rebecca Smith" data-name />
+            </div>
+
+            <div>
+              <label for="phone">Phone</label>
+              <input id="phone" type="tel" placeholder="(###) ###-####" data-phone />
+            </div>
+
+            <div>
+              <label for="email">Email (optional)</label>
+              <input id="email" type="email" placeholder="you@example.com" data-email />
+            </div>
+
+            <div>
               <label for="date">Drop-off date</label>
               <input id="date" type="date" data-delivery-date />
             </div>
-            <div>
+
+            <div style="grid-column:1/-1">
               <label for="time">Time window</label>
               <select id="time" data-delivery-time>
                 <option value="">Select...</option>
@@ -89,15 +106,6 @@
               <textarea id="address" placeholder="Street, unit, city, postal code" data-address></textarea>
             </div>
 
-            <div>
-              <label for="phone">Phone</label>
-              <input id="phone" type="tel" placeholder="(###) ###-####" data-phone />
-            </div>
-            <div>
-              <label for="email">Email</label>
-              <input id="email" type="email" placeholder="you@example.com" data-email />
-            </div>
-
             <div style="grid-column:1/-1">
               <label for="notes">Notes (optional)</label>
               <textarea id="notes" placeholder="Buzzer code, allergies, etc." data-notes></textarea>
@@ -105,29 +113,25 @@
           </div>
 
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-            <button class="btn btn-primary" data-place-order>Place order</button>
+            <button id="place-order-btn" class="btn btn-primary" data-place-order>Place order</button>
             <a class="btn" href="./index.html">Add more items</a>
           </div>
 
           <div class="hr"></div>
 
           <div class="notice">
-            GitHub Pages can’t receive orders directly. When you click “Place order”, a summary will appear below.
-            You can copy/paste it into an email, DM, or a Google Form workflow.
+            When you click “Place order”, your order details will be sent directly to Reb Bakes on Telegram.
           </div>
-
-          <label style="margin-top:10px">Order summary (JSON)</label>
-          <textarea readonly data-order-output placeholder="Click “Place order” to generate..."></textarea>
         </div>
       </section>
     </div>
 
     <div class="footer">
-      Tip: later, you can connect this to a real checkout using Stripe + a backend (or Shopify), but this is a great start.
+      Orders are sent directly to Reb Bakes. You’ll be contacted to confirm your order details.
     </div>
   </div>
 
   <div class="toast" data-toast></div>
-  <script src="./cart.js"></script>
+  <script src="./cart.js?v=5"></script>
 </body>
 </html>
