@@ -1,10 +1,8 @@
-// cart.js
 const CONFIG = {
   currency: "CAD",
-  taxRate: 0.12,          // <-- change later (e.g., 0.05, 0.13, etc.)
-  includeTaxByDefault: true,
   productsJsonPath: "./products.json",
-  cartKey: "bakery_cart_v1"
+  taxRate: 0.12, // change if needed
+  cartStorageKey: "bakery_cart_v1"
 };
 
 function formatMoney(amount) {
@@ -16,25 +14,31 @@ function formatMoney(amount) {
 
 function readCart() {
   try {
-    return JSON.parse(localStorage.getItem(CONFIG.cartKey)) || {};
+    return JSON.parse(localStorage.getItem(CONFIG.cartStorageKey)) || {};
   } catch {
     return {};
   }
 }
 
 function writeCart(cart) {
-  localStorage.setItem(CONFIG.cartKey, JSON.stringify(cart));
-  updateBadge();
+  localStorage.setItem(CONFIG.cartStorageKey, JSON.stringify(cart));
+  updateCartBadge();
+}
+
+function clearCart() {
+  localStorage.removeItem(CONFIG.cartStorageKey);
+  updateCartBadge();
 }
 
 function cartCount(cart) {
   return Object.values(cart).reduce((sum, qty) => sum + Number(qty || 0), 0);
 }
 
-function updateBadge() {
+function updateCartBadge() {
   const badge = document.querySelector("[data-cart-badge]");
   if (!badge) return;
-  badge.textContent = `${cartCount(readCart())} item(s)`;
+  const cart = readCart();
+  badge.textContent = `${cartCount(cart)} item(s)`;
 }
 
 function toast(msg) {
@@ -42,243 +46,275 @@ function toast(msg) {
   if (!t) return;
   t.textContent = msg;
   t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 1400);
+  setTimeout(() => t.classList.remove("show"), 1600);
 }
 
 async function loadProducts() {
-  const res = await fetch(CONFIG.productsJsonPath, { cache: "no-store" });
+  const res = await fetch(`${CONFIG.productsJsonPath}?v=5`, { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to load products.json");
-  const products = await res.json();
-  const map = new Map(products.map(p => [p.id, p]));
-  return map;
+  return await res.json();
 }
 
-function setMinDeliveryDate() {
-  const input = document.querySelector("[data-delivery-date]");
-  if (!input) return;
-
-  const now = new Date();
-  const min = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1); // tomorrow
-  const max = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 14); // next 14 days
-
-  const toISO = (d) => d.toISOString().slice(0,10);
-
-  input.min = toISO(min);
-  input.max = toISO(max);
+function getProductThumb(product) {
+  return product.image || product.poster || product.gallery?.[0] || "";
 }
 
-function buildItemRow(product, qty, onChangeQty, onRemove) {
-  const row = document.createElement("div");
-  row.className = "item";
-
-  const thumb = document.createElement("div");
-  thumb.className = "thumb";
-  thumb.style.backgroundImage = `url("${product.image}")`;
-
-  const info = document.createElement("div");
-  const title = document.createElement("h4");
-  title.textContent = product.name;
-
-  const meta = document.createElement("div");
-  meta.className = "meta";
-  meta.textContent = `${formatMoney(product.price)} each`;
-
-  info.appendChild(title);
-  info.appendChild(meta);
-
-  const controls = document.createElement("div");
-  controls.className = "qty";
-
-  const qtyInput = document.createElement("input");
-  qtyInput.type = "number";
-  qtyInput.min = "1";
-  qtyInput.step = "1";
-  qtyInput.value = String(qty);
-
-  qtyInput.addEventListener("change", () => {
-    const v = Math.max(1, Math.floor(Number(qtyInput.value || 1)));
-    qtyInput.value = String(v);
-    onChangeQty(v);
-  });
-
-  const removeBtn = document.createElement("button");
-  removeBtn.className = "btn btn-danger";
-  removeBtn.textContent = "Remove";
-  removeBtn.addEventListener("click", onRemove);
-
-  controls.appendChild(qtyInput);
-  controls.appendChild(removeBtn);
-
-  row.appendChild(thumb);
-  row.appendChild(info);
-  row.appendChild(controls);
-
-  return row;
-}
-
-function computeTotals(productsMap, cart, includeTax) {
+function computeSummary(products, cart, includeTax) {
+  const items = [];
   let subtotal = 0;
-  for (const [id, qty] of Object.entries(cart)) {
-    const p = productsMap.get(id);
-    if (!p) continue;
-    subtotal += p.price * Number(qty || 0);
+
+  for (const product of products) {
+    const qty = Number(cart[product.id] || 0);
+    if (qty <= 0) continue;
+
+    const lineTotal = qty * Number(product.price || 0);
+    subtotal += lineTotal;
+
+    items.push({
+      id: product.id,
+      name: product.name,
+      qty,
+      price: Number(product.price || 0),
+      lineTotal,
+      image: getProductThumb(product)
+    });
   }
+
   const tax = includeTax ? subtotal * CONFIG.taxRate : 0;
   const total = subtotal + tax;
-  return { subtotal, tax, total };
+
+  return { items, subtotal, tax, total };
 }
 
-function renderTotals(totals, includeTax) {
-  document.querySelector("[data-subtotal]").textContent = formatMoney(totals.subtotal);
-  document.querySelector("[data-tax]").textContent = includeTax ? formatMoney(totals.tax) : formatMoney(0);
-  document.querySelector("[data-total]").textContent = formatMoney(totals.total);
-}
-
-function validateCheckout(cart) {
-  if (Object.keys(cart).length === 0) return "Your cart is empty.";
-
-  const date = document.querySelector("[data-delivery-date]")?.value?.trim();
-  const time = document.querySelector("[data-delivery-time]")?.value?.trim();
-  const address = document.querySelector("[data-address]")?.value?.trim();
-  const phone = document.querySelector("[data-phone]")?.value?.trim();
-  const email = document.querySelector("[data-email]")?.value?.trim();
-
-  if (!date) return "Please choose a delivery date.";
-  if (!time) return "Please choose a delivery time window.";
-  if (!address) return "Please enter your delivery address.";
-  if (!phone) return "Please enter a phone number.";
-  if (!email) return "Please enter an email.";
-
-  // simple checks (not perfect)
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  if (!emailOk) return "Please enter a valid email address.";
-
-  return null;
-}
-
-async function init() {
-  updateBadge();
-  setMinDeliveryDate();
-
-  const productsMap = await loadProducts();
+function renderCart(products) {
   const cart = readCart();
+  const includeTax = Boolean(document.querySelector("[data-include-tax]")?.checked);
 
-  const includeTaxToggle = document.querySelector("[data-include-tax]");
-  includeTaxToggle.checked = CONFIG.includeTaxByDefault;
+  const { items, subtotal, tax, total } = computeSummary(products, cart, includeTax);
 
   const itemsWrap = document.querySelector("[data-cart-items]");
-  const emptyWrap = document.querySelector("[data-empty]");
-  const checkoutBtn = document.querySelector("[data-place-order]");
-  const clearBtn = document.querySelector("[data-clear-cart]");
+  const emptyNotice = document.querySelector("[data-empty]");
+  const subtotalEl = document.querySelector("[data-subtotal]");
+  const taxEl = document.querySelector("[data-tax]");
+  const totalEl = document.querySelector("[data-total]");
 
-  function rerender() {
-    const cartNow = readCart();
-    const hasItems = Object.keys(cartNow).length > 0;
+  if (!itemsWrap || !emptyNotice || !subtotalEl || !taxEl || !totalEl) return;
 
-    itemsWrap.innerHTML = "";
-    emptyWrap.style.display = hasItems ? "none" : "block";
+  itemsWrap.innerHTML = "";
 
-    for (const [id, qty] of Object.entries(cartNow)) {
-      const p = productsMap.get(id);
-      if (!p) continue;
+  if (items.length === 0) {
+    emptyNotice.style.display = "block";
+  } else {
+    emptyNotice.style.display = "none";
 
-      const row = buildItemRow(
-        p,
-        qty,
-        (newQty) => {
-          const c = readCart();
-          c[id] = newQty;
-          writeCart(c);
-          const totals = computeTotals(productsMap, c, includeTaxToggle.checked);
-          renderTotals(totals, includeTaxToggle.checked);
-        },
-        () => {
-          const c = readCart();
-          delete c[id];
-          writeCart(c);
-          rerender();
-          const totals = computeTotals(productsMap, c, includeTaxToggle.checked);
-          renderTotals(totals, includeTaxToggle.checked);
+    for (const item of items) {
+      const row = document.createElement("div");
+      row.className = "item";
+
+      const thumb = document.createElement("div");
+      thumb.className = "thumb";
+      thumb.style.backgroundImage = item.image ? `url("${item.image}")` : "none";
+
+      const meta = document.createElement("div");
+
+      const title = document.createElement("h4");
+      title.textContent = item.name;
+
+      const details = document.createElement("div");
+      details.className = "meta";
+      details.textContent = `${formatMoney(item.price)} each`;
+
+      meta.appendChild(title);
+      meta.appendChild(details);
+
+      const qtyWrap = document.createElement("div");
+      qtyWrap.className = "qty";
+
+      const minusBtn = document.createElement("button");
+      minusBtn.className = "btn";
+      minusBtn.type = "button";
+      minusBtn.textContent = "−";
+      minusBtn.addEventListener("click", () => {
+        const nextCart = readCart();
+        nextCart[item.id] = Math.max(0, Number(nextCart[item.id] || 0) - 1);
+        if (nextCart[item.id] === 0) delete nextCart[item.id];
+        writeCart(nextCart);
+        renderCart(products);
+      });
+
+      const qtyInput = document.createElement("input");
+      qtyInput.type = "number";
+      qtyInput.min = "0";
+      qtyInput.value = String(item.qty);
+      qtyInput.addEventListener("change", () => {
+        const nextQty = Math.max(0, Number(qtyInput.value || 0));
+        const nextCart = readCart();
+        if (nextQty === 0) {
+          delete nextCart[item.id];
+        } else {
+          nextCart[item.id] = nextQty;
         }
-      );
+        writeCart(nextCart);
+        renderCart(products);
+      });
+
+      const plusBtn = document.createElement("button");
+      plusBtn.className = "btn";
+      plusBtn.type = "button";
+      plusBtn.textContent = "+";
+      plusBtn.addEventListener("click", () => {
+        const nextCart = readCart();
+        nextCart[item.id] = Number(nextCart[item.id] || 0) + 1;
+        writeCart(nextCart);
+        renderCart(products);
+      });
+
+      qtyWrap.appendChild(minusBtn);
+      qtyWrap.appendChild(qtyInput);
+      qtyWrap.appendChild(plusBtn);
+
+      row.appendChild(thumb);
+      row.appendChild(meta);
+      row.appendChild(qtyWrap);
 
       itemsWrap.appendChild(row);
     }
-
-    const totals = computeTotals(productsMap, cartNow, includeTaxToggle.checked);
-    renderTotals(totals, includeTaxToggle.checked);
   }
 
-  includeTaxToggle.addEventListener("change", () => {
-    const totals = computeTotals(productsMap, readCart(), includeTaxToggle.checked);
-    renderTotals(totals, includeTaxToggle.checked);
-  });
-
-  clearBtn.addEventListener("click", () => {
-    localStorage.removeItem(CONFIG.cartKey);
-    updateBadge();
-    rerender();
-    toast("Cart cleared");
-  });
-
-  checkoutBtn.addEventListener("click", async () => {
-    const cartNow = readCart();
-    const err = validateCheckout(cartNow);
-    if (err) {
-      toast(err);
-      return;
-    }
-
-    const includeTax = includeTaxToggle.checked;
-    const totals = computeTotals(productsMap, cartNow, includeTax);
-
-    const order = {
-      createdAt: new Date().toISOString(),
-      currency: CONFIG.currency,
-      includeTax,
-      taxRate: includeTax ? CONFIG.taxRate : 0,
-      items: Object.entries(cartNow).map(([id, qty]) => {
-        const p = productsMap.get(id);
-        return {
-          id,
-          name: p?.name || id,
-          unitPrice: p?.price || 0,
-          qty: Number(qty || 0),
-          lineTotal: (p?.price || 0) * Number(qty || 0)
-        };
-      }),
-      totals: {
-        subtotal: totals.subtotal,
-        tax: totals.tax,
-        total: totals.total
-      },
-      delivery: {
-        date: document.querySelector("[data-delivery-date]").value,
-        timeWindow: document.querySelector("[data-delivery-time]").value
-      },
-      customer: {
-        address: document.querySelector("[data-address]").value.trim(),
-        phone: document.querySelector("[data-phone]").value.trim(),
-        email: document.querySelector("[data-email]").value.trim(),
-        notes: document.querySelector("[data-notes]").value.trim()
-      }
-    };
-
-    const out = document.querySelector("[data-order-output]");
-    out.value = JSON.stringify(order, null, 2);
-
-    try {
-      await navigator.clipboard.writeText(out.value);
-      toast("Order summary copied! (Paste it into your notes/email)");
-    } catch {
-      toast("Order summary generated below.");
-    }
-  });
-
-  rerender();
+  subtotalEl.textContent = formatMoney(subtotal);
+  taxEl.textContent = formatMoney(tax);
+  totalEl.textContent = formatMoney(total);
 }
 
-init().catch(e => {
-  console.error(e);
-  toast("Error loading cart page. Check console.");
-});
+async function placeOrder(products) {
+  const customerName = document.querySelector("[data-name]")?.value.trim() || "";
+  const phone = document.querySelector("[data-phone]")?.value.trim() || "";
+  const email = document.querySelector("[data-email]")?.value.trim() || "";
+  const address = document.querySelector("[data-address]")?.value.trim() || "";
+  const deliveryDate = document.querySelector("[data-delivery-date]")?.value.trim() || "";
+  const deliveryTime = document.querySelector("[data-delivery-time]")?.value.trim() || "";
+  const notes = document.querySelector("[data-notes]")?.value.trim() || "";
+  const includeTax = Boolean(document.querySelector("[data-include-tax]")?.checked);
+
+  const cart = readCart();
+  const { items, subtotal, tax, total } = computeSummary(products, cart, includeTax);
+
+  if (!customerName) {
+    alert("Please enter your full name.");
+    return;
+  }
+
+  if (!phone) {
+    alert("Please enter your phone number.");
+    return;
+  }
+
+  if (!address) {
+    alert("Please enter your address.");
+    return;
+  }
+
+  if (items.length === 0) {
+    alert("Your cart is empty.");
+    return;
+  }
+
+  const payload = {
+    customerName,
+    phone,
+    email,
+    address,
+    deliveryDate,
+    deliveryTime,
+    notes,
+    includeTax,
+    subtotal,
+    tax,
+    total,
+    items: items.map(item => ({
+      name: item.name,
+      qty: item.qty,
+      price: item.price,
+      lineTotal: item.lineTotal
+    }))
+  };
+
+  const btn = document.querySelector("[data-place-order]");
+  const originalText = btn ? btn.textContent : "Place order";
+
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Sending...";
+    }
+
+    const response = await fetch("/api/send-order", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+      throw new Error(data.error || "Failed to send order.");
+    }
+
+    clearCart();
+    toast("Order sent successfully!");
+
+    setTimeout(() => {
+      alert("Your order was sent successfully. Reb Bakes will contact you soon.");
+      window.location.href = "./index.html";
+    }, 300);
+  } catch (error) {
+    console.error(error);
+    alert("There was a problem sending your order. Please try again.");
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  }
+}
+
+async function initCartPage() {
+  updateCartBadge();
+
+  let products = [];
+  try {
+    products = await loadProducts();
+  } catch (error) {
+    console.error(error);
+    const itemsWrap = document.querySelector("[data-cart-items]");
+    if (itemsWrap) {
+      itemsWrap.innerHTML = `<div class="notice">Could not load products. Please try again later.</div>`;
+    }
+    return;
+  }
+
+  renderCart(products);
+
+  const taxToggle = document.querySelector("[data-include-tax]");
+  if (taxToggle) {
+    taxToggle.addEventListener("change", () => renderCart(products));
+  }
+
+  const clearBtn = document.querySelector("[data-clear-cart]");
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      clearCart();
+      renderCart(products);
+      toast("Cart cleared");
+    });
+  }
+
+  const orderBtn = document.querySelector("[data-place-order]");
+  if (orderBtn) {
+    orderBtn.addEventListener("click", () => placeOrder(products));
+  }
+}
+
+initCartPage();
