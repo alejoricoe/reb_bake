@@ -1,4 +1,3 @@
-// app.js
 const CONFIG = {
   currency: "CAD",
   productsJsonPath: "./products.json"
@@ -9,77 +8,6 @@ function formatMoney(amount) {
     style: "currency",
     currency: CONFIG.currency
   }).format(amount);
-}
-
-async function placeOrder() {
-  const customerName = document.querySelector("#name")?.value.trim() || "";
-  const email = document.querySelector("#email")?.value.trim() || "";
-  const phone = document.querySelector("#phone")?.value.trim() || "";
-  const address = document.querySelector("#address")?.value.trim() || "";
-  const deliveryDate = document.querySelector("#delivery-date")?.value.trim() || "";
-  const deliveryTime = document.querySelector("#delivery-time")?.value.trim() || "";
-  const notes = document.querySelector("#notes")?.value.trim() || "";
-
-  const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-
-  if (!customerName || !phone || !address) {
-    alert("Please fill in your name, phone, and address.");
-    return;
-  }
-
-  if (!cart.length) {
-    alert("Your cart is empty.");
-    return;
-  }
-
-  const items = cart.map(item => ({
-    name: item.name,
-    qty: Number(item.qty || 1),
-    price: Number(item.price || 0)
-  }));
-
-  const total = items.reduce((sum, item) => sum + item.qty * item.price, 0);
-
-  const payload = {
-    customerName,
-    email,
-    phone,
-    address,
-    deliveryDate,
-    deliveryTime,
-    notes,
-    items,
-    total
-  };
-
-  try {
-    const btn = document.querySelector("#place-order-btn");
-    if (btn) btn.disabled = true;
-
-    const response = await fetch("/api/send-order", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || !data.ok) {
-      throw new Error(data.error || "Failed to place order");
-    }
-
-    alert("Order sent successfully. We will contact you soon.");
-    localStorage.removeItem("cart");
-    window.location.href = "./index.html";
-  } catch (error) {
-    console.error(error);
-    alert("There was a problem sending your order. Please try again.");
-  } finally {
-    const btn = document.querySelector("#place-order-btn");
-    if (btn) btn.disabled = false;
-  }
 }
 
 function readCart() {
@@ -115,7 +43,7 @@ function toast(msg) {
 }
 
 async function loadProducts() {
-  const res = await fetch(CONFIG.productsJsonPath, { cache: "no-store" });
+  const res = await fetch(`${CONFIG.productsJsonPath}?v=5`, { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to load products.json");
   return await res.json();
 }
@@ -132,6 +60,7 @@ function createMediaArea(product) {
   stage.className = "media-stage";
 
   const items = [];
+
   if (product.video) {
     items.push({
       type: "video",
@@ -139,11 +68,13 @@ function createMediaArea(product) {
       poster: getProductThumb(product)
     });
   }
+
   if (Array.isArray(product.gallery)) {
     product.gallery.filter(Boolean).forEach(src => {
       items.push({ type: "image", src });
     });
   }
+
   if (items.length === 0) {
     const thumb = getProductThumb(product);
     if (thumb) items.push({ type: "image", src: thumb });
@@ -211,43 +142,43 @@ function createMediaArea(product) {
   return wrap;
 }
 
-function productCard(p) {
+function productCard(product) {
   const card = document.createElement("div");
   card.className = "card";
 
-  const media = createMediaArea(p);
+  const media = createMediaArea(product);
 
   const body = document.createElement("div");
   body.className = "card-body";
 
-  const h = document.createElement("h4");
-  h.textContent = p.name;
+  const title = document.createElement("h4");
+  title.textContent = product.name;
 
-  const d = document.createElement("p");
-  d.textContent = p.description || "";
+  const description = document.createElement("p");
+  description.textContent = product.description || "";
 
   const priceRow = document.createElement("div");
   priceRow.className = "price-row";
 
   const price = document.createElement("div");
   price.className = "price";
-  price.textContent = formatMoney(p.price);
+  price.textContent = formatMoney(product.price);
 
   const btn = document.createElement("button");
   btn.className = "btn btn-primary";
   btn.textContent = "Add to cart";
   btn.addEventListener("click", () => {
     const cart = readCart();
-    cart[p.id] = (cart[p.id] || 0) + 1;
+    cart[product.id] = (cart[product.id] || 0) + 1;
     writeCart(cart);
-    toast(`Added: ${p.name}`);
+    toast(`Added: ${product.name}`);
   });
 
   priceRow.appendChild(price);
   priceRow.appendChild(btn);
 
-  body.appendChild(h);
-  body.appendChild(d);
+  body.appendChild(title);
+  body.appendChild(description);
   body.appendChild(priceRow);
 
   card.appendChild(media);
@@ -265,10 +196,12 @@ async function init() {
   try {
     const products = await loadProducts();
     grid.innerHTML = "";
-    products.forEach(p => grid.appendChild(productCard(p)));
-  } catch (e) {
+    products.forEach(product => {
+      grid.appendChild(productCard(product));
+    });
+  } catch (error) {
+    console.error(error);
     grid.innerHTML = `<div class="notice">Could not load products. Check products.json path.</div>`;
-    console.error(e);
   }
 }
 
