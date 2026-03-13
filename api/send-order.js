@@ -1,22 +1,28 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ ok: false, error: "Method not allowed" });
+    return res.status(405).json({
+      ok: false,
+      error: "Method not allowed"
+    });
   }
 
   try {
     const {
       customerName,
-      email,
       phone,
+      email,
       address,
       deliveryDate,
       deliveryTime,
       notes,
-      items,
-      total
+      includeTax,
+      subtotal,
+      tax,
+      total,
+      items
     } = req.body || {};
 
-    if (!customerName || !phone || !address || !items || !items.length) {
+    if (!customerName || !phone || !address || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({
         ok: false,
         error: "Missing required order fields"
@@ -29,15 +35,15 @@ export default async function handler(req, res) {
     if (!botToken || !chatId) {
       return res.status(500).json({
         ok: false,
-        error: "Server is missing Telegram configuration"
+        error: "Missing Telegram environment variables"
       });
     }
 
     const itemsText = items
-      .map((item) => {
+      .map(item => {
         const qty = Number(item.qty || 0);
         const price = Number(item.price || 0);
-        const lineTotal = qty * price;
+        const lineTotal = Number(item.lineTotal || qty * price);
         return `• ${item.name} x${qty} — $${lineTotal.toFixed(2)} CAD`;
       })
       .join("\n");
@@ -46,8 +52,8 @@ export default async function handler(req, res) {
 `🧁 New Reb Bakes Order
 
 👤 Name: ${customerName}
-📧 Email: ${email || "N/A"}
 📱 Phone: ${phone}
+📧 Email: ${email || "N/A"}
 📍 Address: ${address}
 📅 Date: ${deliveryDate || "N/A"}
 ⏰ Time: ${deliveryTime || "N/A"}
@@ -55,12 +61,15 @@ export default async function handler(req, res) {
 🛒 Items:
 ${itemsText}
 
+💰 Subtotal: $${Number(subtotal || 0).toFixed(2)} CAD
+🧾 Tax included: ${includeTax ? "Yes" : "No"}
+🧮 Tax: $${Number(tax || 0).toFixed(2)} CAD
 💵 Total: $${Number(total || 0).toFixed(2)} CAD
 
 📝 Notes:
 ${notes || "None"}`;
 
-    const tgRes = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    const telegramResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -71,22 +80,24 @@ ${notes || "None"}`;
       })
     });
 
-    const tgData = await tgRes.json();
+    const telegramData = await telegramResponse.json();
 
-    if (!tgRes.ok || !tgData.ok) {
+    if (!telegramResponse.ok || !telegramData.ok) {
       return res.status(500).json({
         ok: false,
         error: "Telegram API request failed",
-        details: tgData
+        details: telegramData
       });
     }
 
-    return res.status(200).json({ ok: true });
-  } catch (err) {
+    return res.status(200).json({
+      ok: true
+    });
+  } catch (error) {
+    console.error(error);
     return res.status(500).json({
       ok: false,
-      error: "Unexpected server error",
-      details: String(err)
+      error: "Unexpected server error"
     });
   }
 }
