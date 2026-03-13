@@ -11,6 +11,77 @@ function formatMoney(amount) {
   }).format(amount);
 }
 
+async function placeOrder() {
+  const customerName = document.querySelector("#name")?.value.trim() || "";
+  const email = document.querySelector("#email")?.value.trim() || "";
+  const phone = document.querySelector("#phone")?.value.trim() || "";
+  const address = document.querySelector("#address")?.value.trim() || "";
+  const deliveryDate = document.querySelector("#delivery-date")?.value.trim() || "";
+  const deliveryTime = document.querySelector("#delivery-time")?.value.trim() || "";
+  const notes = document.querySelector("#notes")?.value.trim() || "";
+
+  const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+  if (!customerName || !phone || !address) {
+    alert("Please fill in your name, phone, and address.");
+    return;
+  }
+
+  if (!cart.length) {
+    alert("Your cart is empty.");
+    return;
+  }
+
+  const items = cart.map(item => ({
+    name: item.name,
+    qty: Number(item.qty || 1),
+    price: Number(item.price || 0)
+  }));
+
+  const total = items.reduce((sum, item) => sum + item.qty * item.price, 0);
+
+  const payload = {
+    customerName,
+    email,
+    phone,
+    address,
+    deliveryDate,
+    deliveryTime,
+    notes,
+    items,
+    total
+  };
+
+  try {
+    const btn = document.querySelector("#place-order-btn");
+    if (btn) btn.disabled = true;
+
+    const response = await fetch("/api/send-order", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+      throw new Error(data.error || "Failed to place order");
+    }
+
+    alert("Order sent successfully. We will contact you soon.");
+    localStorage.removeItem("cart");
+    window.location.href = "./index.html";
+  } catch (error) {
+    console.error(error);
+    alert("There was a problem sending your order. Please try again.");
+  } finally {
+    const btn = document.querySelector("#place-order-btn");
+    if (btn) btn.disabled = false;
+  }
+}
+
 function readCart() {
   try {
     return JSON.parse(localStorage.getItem("bakery_cart_v1")) || {};
